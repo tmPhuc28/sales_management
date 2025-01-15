@@ -1,6 +1,7 @@
 // lib/presentation/screens/order/order_list_screen.dart
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:sales_management/presentation/widgets/custom_app_bar.dart';
 import '../../../data/repositories/order_repository.dart';
 import 'package:provider/provider.dart';
 
@@ -10,42 +11,32 @@ class OrderListScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: NestedScrollView(
-        headerSliverBuilder: (context, innerBoxIsScrolled) {
-          return [
-            const SliverAppBar(
-              title: Text('Hóa đơn'),
-              pinned: true,
-              floating: true,
-            ),
-          ];
+      appBar: const CustomAppBar(title: "Hóa đơn"),
+      body: FutureBuilder<List<Map<String, dynamic>>>(
+        future: context.read<OrderRepository>().getAllOrders(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          }
+
+          final orders = snapshot.data ?? [];
+          if (orders.isEmpty) {
+            return const Center(child: Text('No orders found'));
+          }
+
+          return ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: orders.length,
+            itemBuilder: (context, index) {
+              final order = orders[index];
+              return OrderCard(order: order);
+            },
+          );
         },
-        body: FutureBuilder<List<Map<String, dynamic>>>(
-          future: context.read<OrderRepository>().getAllOrders(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            }
-
-            if (snapshot.hasError) {
-              return Center(child: Text('Error: ${snapshot.error}'));
-            }
-
-            final orders = snapshot.data ?? [];
-            if (orders.isEmpty) {
-              return const Center(child: Text('No orders found'));
-            }
-
-            return ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: orders.length,
-              itemBuilder: (context, index) {
-                final order = orders[index];
-                return OrderCard(order: order);
-              },
-            );
-          },
-        ),
       ),
     );
   }

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:sales_management/presentation/blocs/product/product_event.dart';
+import 'package:sales_management/presentation/widgets/custom_app_bar.dart';
 import 'dart:io';
 import 'package:uuid/uuid.dart';
 import '../../../data/models/product.dart';
@@ -49,7 +50,7 @@ class _ProductScreenState extends State<ProductScreen> {
   Future<void> _loadCategories() async {
     try {
       final categories =
-          await context.read<CategoryRepository>().getAllCategories();
+      await context.read<CategoryRepository>().getAllCategories();
       setState(() {
         _categories = categories;
         if (_selectedCategoryId == null && categories.isNotEmpty) {
@@ -178,192 +179,195 @@ class _ProductScreenState extends State<ProductScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.product == null ? 'Add Product' : 'Edit Product'),
-        actions: [
-          if (widget.product != null)
-            IconButton(
-              icon: const Icon(Icons.delete),
-              onPressed: () => _showDeleteConfirmation(context),
-              color: Colors.red,
-            ),
-        ],
+      appBar: CustomAppBar(
+        title: widget.product == null ? 'Thêm sản phẩm' : 'Cập nhật',
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Image Picker
-                    Center(
-                      child: GestureDetector(
-                        onTap: _pickImage,
-                        child: Container(
-                          width: 200,
-                          height: 200,
-                          decoration: BoxDecoration(
-                            color: Colors.grey[200],
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: _buildImageWidget(),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
+        padding: const EdgeInsets.all(16.0),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Delete Button for Edit Mode
+              if (widget.product != null)
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: IconButton(
+                    icon: const Icon(Icons.delete),
+                    color: Colors.red,
+                    onPressed: () => _showDeleteConfirmation(context),
+                  ),
+                ),
 
-                    // Category Dropdown
-                    DropdownButtonFormField<String>(
-                      value: _selectedCategoryId,
-                      decoration: const InputDecoration(
-                        labelText: 'Category',
-                        border: OutlineInputBorder(),
-                      ),
-                      items: _categories.map((category) {
-                        return DropdownMenuItem(
-                          value: category.id,
-                          child: Text(category.name),
-                        );
-                      }).toList(),
-                      onChanged: (value) {
-                        setState(() => _selectedCategoryId = value);
-                      },
-                      validator: (value) {
-                        if (value == null) {
-                          return 'Please select a category';
-                        }
-                        return null;
-                      },
+              // Image Picker
+              Center(
+                child: GestureDetector(
+                  onTap: _pickImage,
+                  child: Container(
+                    width: 200,
+                    height: 200,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[200],
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    const SizedBox(height: 16),
+                    child: _buildImageWidget(),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
 
-                    // Product Name
-                    TextFormField(
-                      controller: _nameController,
-                      decoration: const InputDecoration(
-                        labelText: 'Product Name*',
-                        border: OutlineInputBorder(),
-                      ),
-                      validator: (value) {
-                        if (value?.isEmpty ?? true) {
-                          return 'Please enter product name';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
+              // Category Dropdown
+              DropdownButtonFormField<String>(
+                value: _selectedCategoryId,
+                decoration: const InputDecoration(
+                  labelText: 'Category',
+                  border: OutlineInputBorder(),
+                ),
+                items: _categories.map((category) {
+                  return DropdownMenuItem(
+                    value: category.id,
+                    child: Text(category.name),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  setState(() => _selectedCategoryId = value);
+                },
+                validator: (value) {
+                  if (value == null) {
+                    return 'Please select a category';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
 
-                    // Product Code
-                    TextFormField(
-                      controller: _codeController,
-                      decoration: const InputDecoration(
-                        labelText: 'Product Code (Optional)',
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
+              // Product Name
+              TextFormField(
+                controller: _nameController,
+                decoration: const InputDecoration(
+                  labelText: 'Product Name*',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) {
+                  if (value?.isEmpty ?? true) {
+                    return 'Please enter product name';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
 
-                    // Prices Row
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextFormField(
-                            controller: _sellingPriceController,
-                            keyboardType: TextInputType.number,
-                            decoration: const InputDecoration(
-                              labelText: 'Selling Price*',
-                              border: OutlineInputBorder(),
-                              prefixText: '\$',
-                            ),
-                            validator: (value) {
-                              if (value?.isEmpty ?? true) {
-                                return 'Required';
-                              }
-                              if (double.tryParse(value!) == null) {
-                                return 'Invalid number';
-                              }
-                              return null;
-                            },
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: TextFormField(
-                            controller: _costPriceController,
-                            keyboardType: TextInputType.number,
-                            decoration: const InputDecoration(
-                              labelText: 'Cost Price*',
-                              border: OutlineInputBorder(),
-                              prefixText: '\$',
-                            ),
-                            validator: (value) {
-                              if (value?.isEmpty ?? true) {
-                                return 'Required';
-                              }
-                              if (double.tryParse(value!) == null) {
-                                return 'Invalid number';
-                              }
-                              return null;
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
+              // Product Code
+              TextFormField(
+                controller: _codeController,
+                decoration: const InputDecoration(
+                  labelText: 'Product Code (Optional)',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
 
-                    // Quantity
-                    TextFormField(
-                      controller: _quantityController,
+              // Prices Row
+              Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _sellingPriceController,
                       keyboardType: TextInputType.number,
                       decoration: const InputDecoration(
-                        labelText: 'Quantity*',
+                        labelText: 'Selling Price*',
                         border: OutlineInputBorder(),
+                        prefixText: '\$',
                       ),
                       validator: (value) {
                         if (value?.isEmpty ?? true) {
                           return 'Required';
                         }
-                        if (int.tryParse(value!) == null) {
+                        if (double.tryParse(value!) == null) {
                           return 'Invalid number';
                         }
                         return null;
                       },
                     ),
-                    const SizedBox(height: 16),
-
-                    // Notes
-                    TextFormField(
-                      controller: _notesController,
-                      maxLines: 3,
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: TextFormField(
+                      controller: _costPriceController,
+                      keyboardType: TextInputType.number,
                       decoration: const InputDecoration(
-                        labelText: 'Notes (Optional)',
+                        labelText: 'Cost Price*',
                         border: OutlineInputBorder(),
+                        prefixText: '\$',
                       ),
+                      validator: (value) {
+                        if (value?.isEmpty ?? true) {
+                          return 'Required';
+                        }
+                        if (double.tryParse(value!) == null) {
+                          return 'Invalid number';
+                        }
+                        return null;
+                      },
                     ),
-                    const SizedBox(height: 24),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
 
-                    // Submit Button
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: _submitForm,
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                        ),
-                        child: Text(
-                          widget.product == null
-                              ? 'Add Product'
-                              : 'Save Changes',
-                        ),
-                      ),
-                    ),
-                  ],
+              // Quantity
+              TextFormField(
+                controller: _quantityController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'Quantity*',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) {
+                  if (value?.isEmpty ?? true) {
+                    return 'Required';
+                  }
+                  if (int.tryParse(value!) == null) {
+                    return 'Invalid number';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+
+              // Notes
+              TextFormField(
+                controller: _notesController,
+                maxLines: 3,
+                decoration: const InputDecoration(
+                  labelText: 'Notes (Optional)',
+                  border: OutlineInputBorder(),
                 ),
               ),
-            ),
+              const SizedBox(height: 24),
+
+              // Submit Button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _submitForm,
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  child: Text(
+                    widget.product == null
+                        ? 'Add Product'
+                        : 'Save Changes',
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 

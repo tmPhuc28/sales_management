@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:sales_management/presentation/widgets/custom_app_bar.dart';
 import '../../../data/repositories/order_repository.dart';
 import '../../../data/repositories/product_repository.dart';
 
@@ -56,8 +57,8 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Order #${widget.orderId.substring(0, 8)}'),
+      appBar: CustomAppBar(
+        title: 'Đơn hàng #${widget.orderId.substring(0, 8)}',
       ),
       body: FutureBuilder<Map<String, dynamic>>(
         future: context.read<OrderRepository>().getOrderDetails(widget.orderId),

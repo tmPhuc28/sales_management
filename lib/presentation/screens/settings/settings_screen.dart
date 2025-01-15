@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:sales_management/presentation/widgets/custom_app_bar.dart';
 import '../../blocs/settings/settings_bloc.dart';
 import '../../blocs/settings/settings_event.dart';
 import '../../blocs/settings/settings_state.dart';
@@ -13,8 +14,8 @@ class SettingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Cài đặt'),
+      appBar: const CustomAppBar(
+        title: 'Cài đặt',
       ),
       body: BlocConsumer<SettingsBloc, SettingsState>(
         listener: (context, state) {

@@ -1,6 +1,7 @@
 // lib/presentation/screens/category/category_list_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sales_management/presentation/widgets/custom_app_bar.dart';
 import '../../../data/repositories/category_repository.dart';
 import '../../../data/models/category.dart';
 import 'package:uuid/uuid.dart';
@@ -30,60 +31,45 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          const SliverAppBar(
-            title: Text('Danh mục'),
-            floating: true,
-            snap: true,
-          ),
-          SliverPadding(
-            padding: const EdgeInsets.all(16),
-            sliver: FutureBuilder<List<Category>>(
-              future: _categoriesFuture,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const SliverFillRemaining(
-                    child: Center(child: CircularProgressIndicator()),
-                  );
-                }
+      appBar: const CustomAppBar(
+        title: "Danh mục",
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: FutureBuilder<List<Category>>(
+          future: _categoriesFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-                if (snapshot.hasError) {
-                  return SliverFillRemaining(
-                    child: Center(child: Text('Error: ${snapshot.error}')),
-                  );
-                }
+            if (snapshot.hasError) {
+              return Center(child: Text('Error: ${snapshot.error}'));
+            }
 
-                final categories = snapshot.data ?? [];
-                if (categories.isEmpty) {
-                  return const SliverFillRemaining(
-                    child: Center(child: Text('Không tìm thấy danh mục')),
-                  );
-                }
+            final categories = snapshot.data ?? [];
+            if (categories.isEmpty) {
+              return const Center(child: Text('Không tìm thấy danh mục'));
+            }
 
-                return SliverGrid(
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    mainAxisSpacing: 16,
-                    crossAxisSpacing: 16,
-                    childAspectRatio: 1.1,
-                  ),
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      final category = categories[index];
-                      return CategoryCard(
-                        category: category,
-                        onEdit: () =>
-                            _showEditCategoryDialog(context, category),
-                      );
-                    },
-                    childCount: categories.length,
-                  ),
+            return GridView.builder(
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                mainAxisSpacing: 16,
+                crossAxisSpacing: 16,
+                childAspectRatio: 1.1,
+              ),
+              itemCount: categories.length,
+              itemBuilder: (context, index) {
+                final category = categories[index];
+                return CategoryCard(
+                  category: category,
+                  onEdit: () => _showEditCategoryDialog(context, category),
                 );
               },
-            ),
-          ),
-        ],
+            );
+          },
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddCategoryDialog(context),

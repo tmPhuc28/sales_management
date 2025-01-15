@@ -9,6 +9,7 @@ import 'package:sales_management/data/repositories/order_repository.dart';
 import 'package:sales_management/data/repositories/product_repository.dart';
 import 'package:sales_management/presentation/widgets/charts/product_chart.dart';
 import 'package:sales_management/presentation/widgets/charts/sales_chart.dart';
+import 'package:sales_management/presentation/widgets/custom_app_bar.dart';
 
 class SalesStatisticsScreen extends StatefulWidget {
   const SalesStatisticsScreen({super.key});
@@ -17,8 +18,7 @@ class SalesStatisticsScreen extends StatefulWidget {
   State<SalesStatisticsScreen> createState() => _SalesStatisticsScreenState();
 }
 
-class _SalesStatisticsScreenState extends State<SalesStatisticsScreen>
-    with SingleTickerProviderStateMixin {
+class _SalesStatisticsScreenState extends State<SalesStatisticsScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
   DateTime _startDate = DateTime.now().subtract(const Duration(days: 30));
   DateTime _endDate = DateTime.now();
@@ -42,16 +42,27 @@ class _SalesStatisticsScreenState extends State<SalesStatisticsScreen>
         headerSliverBuilder: (context, innerBoxIsScrolled) {
           return [
             SliverAppBar(
-              title: const Text('Statistics'),
-              floating: true,
-              snap: true,
+              title: const Text('Thống kê'),
+              centerTitle: true,
+              pinned: true,
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () {
+                  if (Navigator.of(context).canPop()) {
+                    Navigator.of(context).pop();
+                  } else {
+                    Navigator.of(context).pushReplacementNamed('/');
+                  }
+                },
+              ),
               bottom: PreferredSize(
-                preferredSize: const Size.fromHeight(100),
+                preferredSize: const Size.fromHeight(110),
                 child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     // Date Range Selector
                     Padding(
-                      padding: const EdgeInsets.all(16.0),
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
                       child: InkWell(
                         onTap: () async {
                           final picked = await showDateRangePicker(
@@ -86,8 +97,8 @@ class _SalesStatisticsScreenState extends State<SalesStatisticsScreen>
                               const Icon(Icons.calendar_today, size: 20),
                               const SizedBox(width: 8),
                               Text(
-                                '${DateFormat('MMM dd, yyyy').format(_startDate)} - '
-                                '${DateFormat('MMM dd, yyyy').format(_endDate)}',
+                                '${DateFormat('dd/MM/yyyy').format(_startDate)} - '
+                                    '${DateFormat('dd/MM/yyyy').format(_endDate)}',
                               ),
                             ],
                           ),
@@ -98,9 +109,9 @@ class _SalesStatisticsScreenState extends State<SalesStatisticsScreen>
                     TabBar(
                       controller: _tabController,
                       tabs: const [
-                        Tab(text: 'Overview'),
-                        Tab(text: 'Sales'),
-                        Tab(text: 'Products'),
+                        Tab(text: 'Tổng quan'),
+                        Tab(text: 'Doanh thu'),
+                        Tab(text: 'Sản phẩm'),
                       ],
                     ),
                   ],
