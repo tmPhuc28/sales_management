@@ -43,7 +43,9 @@ dependencies:
   # Local Database
   sqflite: ^2.3.0
   path_provider: ^2.1.1
-  
+  shared_preferences: ^2.2.2
+  file_picker: ^6.1.1
+
   # UI Components
   flutter_slidable: ^3.0.1
   cached_network_image: ^3.3.0

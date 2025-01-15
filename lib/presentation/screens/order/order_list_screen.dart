@@ -10,50 +10,42 @@ class OrderListScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          const SliverAppBar(
-            title: Text('Orders'),
-            floating: true,
-            snap: true,
-          ),
-          SliverPadding(
-            padding: const EdgeInsets.all(16),
-            sliver: FutureBuilder<List<Map<String, dynamic>>>(
-              future: context.read<OrderRepository>().getAllOrders(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const SliverFillRemaining(
-                    child: Center(child: CircularProgressIndicator()),
-                  );
-                }
-
-                if (snapshot.hasError) {
-                  return SliverFillRemaining(
-                    child: Center(child: Text('Error: ${snapshot.error}')),
-                  );
-                }
-
-                final orders = snapshot.data ?? [];
-                if (orders.isEmpty) {
-                  return const SliverFillRemaining(
-                    child: Center(child: Text('No orders found')),
-                  );
-                }
-
-                return SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      final order = orders[index];
-                      return OrderCard(order: order);
-                    },
-                    childCount: orders.length,
-                  ),
-                );
-              },
+      body: NestedScrollView(
+        headerSliverBuilder: (context, innerBoxIsScrolled) {
+          return [
+            const SliverAppBar(
+              title: Text('Hóa đơn'),
+              pinned: true,
+              floating: true,
             ),
-          ),
-        ],
+          ];
+        },
+        body: FutureBuilder<List<Map<String, dynamic>>>(
+          future: context.read<OrderRepository>().getAllOrders(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            if (snapshot.hasError) {
+              return Center(child: Text('Error: ${snapshot.error}'));
+            }
+
+            final orders = snapshot.data ?? [];
+            if (orders.isEmpty) {
+              return const Center(child: Text('No orders found'));
+            }
+
+            return ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: orders.length,
+              itemBuilder: (context, index) {
+                final order = orders[index];
+                return OrderCard(order: order);
+              },
+            );
+          },
+        ),
       ),
     );
   }

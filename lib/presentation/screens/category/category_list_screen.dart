@@ -33,7 +33,7 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
       body: CustomScrollView(
         slivers: [
           const SliverAppBar(
-            title: Text('Categories'),
+            title: Text('Danh mục'),
             floating: true,
             snap: true,
           ),
@@ -57,7 +57,7 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
                 final categories = snapshot.data ?? [];
                 if (categories.isEmpty) {
                   return const SliverFillRemaining(
-                    child: Center(child: Text('No categories found')),
+                    child: Center(child: Text('Không tìm thấy danh mục')),
                   );
                 }
 
@@ -101,7 +101,7 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Add Category'),
+        title: const Text('Thêm danh mục'),
         content: Form(
           key: formKey,
           child: Column(
@@ -109,27 +109,27 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
             children: [
               TextFormField(
                 controller: nameController,
-                decoration: const InputDecoration(labelText: 'Name'),
+                decoration: const InputDecoration(labelText: 'Tên'),
                 validator: (value) {
                   if (value?.isEmpty ?? true) {
-                    return 'Please enter a name';
+                    return 'Vui lòng nhập tên danh mục';
                   }
                   return null;
                 },
               ),
               TextFormField(
                 controller: codeController,
-                decoration: const InputDecoration(labelText: 'Code'),
+                decoration: const InputDecoration(labelText: 'Mã'),
                 validator: (value) {
                   if (value?.isEmpty ?? true) {
-                    return 'Please enter a code';
+                    return 'Vui lòng nhập mã danh mục';
                   }
                   return null;
                 },
               ),
               TextFormField(
                 controller: notesController,
-                decoration: const InputDecoration(labelText: 'Notes'),
+                decoration: const InputDecoration(labelText: 'Ghi chú'),
               ),
             ],
           ),
@@ -137,7 +137,7 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: const Text('Hủy'),
           ),
           TextButton(
             onPressed: () async {
@@ -159,7 +159,7 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
                 }
               }
             },
-            child: const Text('Add'),
+            child: const Text('Thêm'),
           ),
         ],
       ),
@@ -170,10 +170,7 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
     }
   }
 
-  Future<void> _showEditCategoryDialog(
-    BuildContext context,
-    Category category,
-  ) async {
+  Future<void> _showEditCategoryDialog(BuildContext context, Category category,) async {
     final formKey = GlobalKey<FormState>();
     final nameController = TextEditingController(text: category.name);
     final codeController = TextEditingController(text: category.code);
@@ -182,7 +179,7 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Edit Category'),
+        title: const Text('Chỉnh sửa danh mục'),
         content: Form(
           key: formKey,
           child: Column(
@@ -190,27 +187,27 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
             children: [
               TextFormField(
                 controller: nameController,
-                decoration: const InputDecoration(labelText: 'Name'),
+                decoration: const InputDecoration(labelText: 'Tên'),
                 validator: (value) {
                   if (value?.isEmpty ?? true) {
-                    return 'Please enter a name';
+                    return 'Tên danh mục không được bỏ trống';
                   }
                   return null;
                 },
               ),
               TextFormField(
                 controller: codeController,
-                decoration: const InputDecoration(labelText: 'Code'),
+                decoration: const InputDecoration(labelText: 'Mã'),
                 validator: (value) {
                   if (value?.isEmpty ?? true) {
-                    return 'Please enter a code';
+                    return 'Mã danh mục không được bỏ trống';
                   }
                   return null;
                 },
               ),
               TextFormField(
                 controller: notesController,
-                decoration: const InputDecoration(labelText: 'Notes'),
+                decoration: const InputDecoration(labelText: 'Ghi chú'),
               ),
             ],
           ),
@@ -218,7 +215,7 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: const Text('Hủy'),
           ),
           TextButton(
             onPressed: () async {
@@ -238,7 +235,7 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
                 }
               }
             },
-            child: const Text('Save'),
+            child: const Text('Lưu'),
           ),
         ],
       ),
@@ -259,6 +256,66 @@ class CategoryCard extends StatelessWidget {
     required this.category,
     required this.onEdit,
   });
+
+  Future<void> _confirmDelete(BuildContext context) async {
+    try {
+      // Check if category has products
+      final hasProducts = await context.read<CategoryRepository>().hasProducts(category.id);
+      if (hasProducts && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Không thể xóa danh mục này vì có sản phẩm thuộc danh mục này'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      if (!context.mounted) return;
+
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Xóa danh mục'),
+          content: Text('Bạn có chắc muốn xóa danh mục "${category.name}" này?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Hủy'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              style: TextButton.styleFrom(foregroundColor: Colors.red),
+              child: const Text('Xóa'),
+            ),
+          ],
+        ),
+      );
+
+      if (confirmed == true && context.mounted) {
+        await context.read<CategoryRepository>().deleteCategory(category.id);
+        if (context.mounted) {
+          // Refresh categories list
+          _CategoryListScreenState? state =
+          context.findAncestorStateOfType<_CategoryListScreenState>();
+          state?._loadCategories();
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Danh mục đã được xóa')),
+          );
+        }
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Lỗi: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -283,17 +340,14 @@ class CategoryCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Category Icon and Edit Button
+              // Category Icon and Action Buttons
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .primary
-                          .withOpacity(0.1),
+                      color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Icon(
@@ -301,10 +355,19 @@ class CategoryCard extends StatelessWidget {
                       color: Theme.of(context).colorScheme.primary,
                     ),
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.edit_outlined),
-                    onPressed: onEdit,
-                    tooltip: 'Edit Category',
+                  Row(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.edit_outlined),
+                        onPressed: onEdit,
+                        tooltip: 'Chỉnh sửa danh mục',
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.delete_outline, color: Colors.red),
+                        onPressed: () => _confirmDelete(context),
+                        tooltip: 'Xóa danh mục',
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -324,7 +387,7 @@ class CategoryCard extends StatelessWidget {
 
               // Category Code
               Text(
-                'Code: ${category.code}',
+                'Mã: ${category.code}',
                 style: TextStyle(
                   fontSize: 12,
                   color: Colors.grey[600],

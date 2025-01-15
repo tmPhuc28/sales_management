@@ -6,6 +6,17 @@ import 'package:sqflite/sqflite.dart';
 class CategoryRepository {
   final DatabaseHelper _databaseHelper = DatabaseHelper.instance;
 
+  Future<bool> hasProducts(String categoryId) async {
+    final db = await _databaseHelper.database;
+    final List<Map<String, dynamic>> result = await db.query(
+      'products',
+      where: 'category_id = ?',
+      whereArgs: [categoryId],
+      limit: 1,
+    );
+    return result.isNotEmpty;
+  }
+
   Future<List<Category>> getAllCategories() async {
     final db = await _databaseHelper.database;
     final List<Map<String, dynamic>> maps = await db.query('categories');
@@ -42,6 +53,11 @@ class CategoryRepository {
   }
 
   Future<void> deleteCategory(String id) async {
+    final hasAssociatedProducts = await hasProducts(id);
+    if (hasAssociatedProducts) {
+      throw Exception('Cannot delete category with existing products');
+    }
+
     final db = await _databaseHelper.database;
     await db.delete(
       'categories',

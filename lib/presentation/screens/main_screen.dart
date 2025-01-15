@@ -4,6 +4,7 @@ import 'home/home_screen.dart';
 import 'statistics/sales_statistics_screen.dart';
 import 'category/category_list_screen.dart';
 import 'order/order_list_screen.dart';
+import 'settings/settings_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -20,6 +21,7 @@ class _MainScreenState extends State<MainScreen> {
     const OrderListScreen(),
     const SalesStatisticsScreen(),
     const CategoryListScreen(),
+    const SettingsScreen(),
   ];
 
   void _onItemTapped(int index) {
@@ -39,31 +41,30 @@ class _MainScreenState extends State<MainScreen> {
           NavigationDestination(
             icon: Icon(Icons.home_outlined),
             selectedIcon: Icon(Icons.home),
-            label: 'Home',
+            label: 'Trang Chủ',
           ),
           NavigationDestination(
             icon: Icon(Icons.receipt_long_outlined),
             selectedIcon: Icon(Icons.receipt_long),
-            label: 'Orders',
+            label: 'Hóa đơn',
           ),
           NavigationDestination(
             icon: Icon(Icons.analytics_outlined),
             selectedIcon: Icon(Icons.analytics),
-            label: 'Statistics',
+            label: 'Thống kê',
           ),
           NavigationDestination(
             icon: Icon(Icons.category_outlined),
             selectedIcon: Icon(Icons.category),
-            label: 'Categories',
+            label: 'Danh mục',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.settings_outlined),
+            selectedIcon: Icon(Icons.settings),
+            label: 'Cài đặt',
           ),
         ],
       ),
-      floatingActionButton: _selectedIndex == 0
-          ? FloatingActionButton(
-              onPressed: () => Navigator.pushNamed(context, '/add-product'),
-              child: const Icon(Icons.add),
-            )
-          : null,
     );
   }
 }

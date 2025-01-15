@@ -22,16 +22,16 @@ class CartScreen extends StatelessWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Cart'),
-        content: const Text('Are you sure you want to delete this cart?'),
+        title: const Text('Xóa giỏ hàng'),
+        content: const Text('Bạn có chắc muốn xóa giỏ hàng này không?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: const Text('Hủy'),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+            child: const Text('Xóa', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -47,7 +47,7 @@ class CartScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Shopping Cart'),
+        title: const Text('Giỏ hàng'),
         actions: [
           IconButton(
             icon: const Icon(Icons.delete),
@@ -63,7 +63,7 @@ class CartScreen extends StatelessWidget {
           if (state is CartLoaded) {
             if (state.activeCart.items.isEmpty) {
               return const Center(
-                child: Text('Cart is empty'),
+                child: Text('Không có sản phẩm nào trong giỏ hàng'),
               );
             }
             return CartItemList(cart: state.activeCart);
@@ -94,7 +94,7 @@ class CartScreen extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text(
-                        'Total:',
+                        'Tổng:',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -125,7 +125,7 @@ class CartScreen extends StatelessWidget {
                           style: ElevatedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 16),
                           ),
-                          child: const Text('Checkout'),
+                          child: const Text('Thanh toán'),
                         ),
                       ),
                     ],
@@ -173,7 +173,7 @@ class CartItemList extends StatelessWidget {
                       backgroundColor: Colors.red,
                       foregroundColor: Colors.white,
                       icon: Icons.delete,
-                      label: 'Delete',
+                      label: 'Xóa',
                     ),
                   ],
                 ),

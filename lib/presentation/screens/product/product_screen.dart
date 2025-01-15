@@ -1,4 +1,4 @@
-// lib/presentation/screens/product/add_product_screen.dart
+// lib/presentation/screens/product/product_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
@@ -10,19 +10,19 @@ import '../../../data/models/category.dart';
 import '../../../data/repositories/category_repository.dart';
 import '../../blocs/product/product_bloc.dart';
 
-class AddProductScreen extends StatefulWidget {
+class ProductScreen extends StatefulWidget {
   final Product? product;
 
-  const AddProductScreen({
+  const ProductScreen({
     super.key,
     this.product,
   });
 
   @override
-  State<AddProductScreen> createState() => _AddProductScreenState();
+  State<ProductScreen> createState() => _ProductScreenState();
 }
 
-class _AddProductScreenState extends State<AddProductScreen> {
+class _ProductScreenState extends State<ProductScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _codeController = TextEditingController();

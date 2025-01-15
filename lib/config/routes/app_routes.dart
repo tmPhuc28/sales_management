@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:sales_management/presentation/screens/main_screen.dart';
 import 'package:sales_management/presentation/screens/order/order_details_screen.dart';
-import '../../presentation/screens/product/add_product_screen.dart';
+import '../../presentation/screens/product/product_screen.dart';
 import '../../presentation/screens/cart/cart_screen.dart';
 import '../../presentation/screens/cart/checkout_screen.dart';
 
@@ -21,7 +21,7 @@ class AppRoutes {
         );
       case addProduct:
         return MaterialPageRoute(
-          builder: (_) => const AddProductScreen(),
+          builder: (_) => const ProductScreen(),
         );
       case cart:
         return MaterialPageRoute(
