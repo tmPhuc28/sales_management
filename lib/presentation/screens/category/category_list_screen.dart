@@ -1,6 +1,7 @@
 // lib/presentation/screens/category/category_list_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sales_management/core/localization/app_strings.dart';
 import 'package:sales_management/presentation/widgets/custom_app_bar.dart';
 import '../../../data/repositories/category_repository.dart';
 import '../../../data/models/category.dart';
@@ -31,25 +32,34 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const CustomAppBar(
-        title: "Danh mục",
-      ),
+      appBar: const CustomAppBar(title: AppStrings.categories),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: FutureBuilder<List<Category>>(
           future: _categoriesFuture,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
+              return const Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(),
+                    SizedBox(height: 16),
+                    Text(AppStrings.loading),
+                  ],
+                ),
+              );
             }
 
             if (snapshot.hasError) {
-              return Center(child: Text('Error: ${snapshot.error}'));
+              return Center(
+                child: Text('${AppStrings.error}: ${snapshot.error}'),
+              );
             }
 
             final categories = snapshot.data ?? [];
             if (categories.isEmpty) {
-              return const Center(child: Text('Không tìm thấy danh mục'));
+              return const Center(child: Text(AppStrings.noCategories));
             }
 
             return GridView.builder(
@@ -78,6 +88,7 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
     );
   }
 
+
   Future<void> _showAddCategoryDialog(BuildContext context) async {
     final formKey = GlobalKey<FormState>();
     final nameController = TextEditingController();
@@ -87,7 +98,7 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Thêm danh mục'),
+        title: const Text(AppStrings.addCategory),
         content: Form(
           key: formKey,
           child: Column(
@@ -95,27 +106,27 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
             children: [
               TextFormField(
                 controller: nameController,
-                decoration: const InputDecoration(labelText: 'Tên'),
+                decoration: const InputDecoration(labelText: AppStrings.categoryName),
                 validator: (value) {
                   if (value?.isEmpty ?? true) {
-                    return 'Vui lòng nhập tên danh mục';
+                    return AppStrings.required;
                   }
                   return null;
                 },
               ),
               TextFormField(
                 controller: codeController,
-                decoration: const InputDecoration(labelText: 'Mã'),
+                decoration: const InputDecoration(labelText: AppStrings.categoryCode),
                 validator: (value) {
                   if (value?.isEmpty ?? true) {
-                    return 'Vui lòng nhập mã danh mục';
+                    return AppStrings.required;
                   }
                   return null;
                 },
               ),
               TextFormField(
                 controller: notesController,
-                decoration: const InputDecoration(labelText: 'Ghi chú'),
+                decoration: const InputDecoration(labelText: AppStrings.notes),
               ),
             ],
           ),
@@ -123,7 +134,7 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Hủy'),
+            child: const Text(AppStrings.cancel),
           ),
           TextButton(
             onPressed: () async {
@@ -137,15 +148,24 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
                   updatedAt: DateTime.now(),
                 );
 
-                await context
-                    .read<CategoryRepository>()
-                    .insertCategory(category);
-                if (context.mounted) {
-                  Navigator.pop(context, true);
+                try {
+                  await context.read<CategoryRepository>().insertCategory(category);
+                  if (context.mounted) {
+                    Navigator.pop(context, true);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text(AppStrings.categorySaved)),
+                    );
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('${AppStrings.error}: $e')),
+                    );
+                  }
                 }
               }
             },
-            child: const Text('Thêm'),
+            child: const Text(AppStrings.add),
           ),
         ],
       ),
@@ -156,7 +176,7 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
     }
   }
 
-  Future<void> _showEditCategoryDialog(BuildContext context, Category category,) async {
+  Future<void> _showEditCategoryDialog(BuildContext context, Category category) async {
     final formKey = GlobalKey<FormState>();
     final nameController = TextEditingController(text: category.name);
     final codeController = TextEditingController(text: category.code);
@@ -165,7 +185,7 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Chỉnh sửa danh mục'),
+        title: const Text(AppStrings.editCategory),
         content: Form(
           key: formKey,
           child: Column(
@@ -173,27 +193,27 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
             children: [
               TextFormField(
                 controller: nameController,
-                decoration: const InputDecoration(labelText: 'Tên'),
+                decoration: const InputDecoration(labelText: AppStrings.categoryName),
                 validator: (value) {
                   if (value?.isEmpty ?? true) {
-                    return 'Tên danh mục không được bỏ trống';
+                    return AppStrings.required;
                   }
                   return null;
                 },
               ),
               TextFormField(
                 controller: codeController,
-                decoration: const InputDecoration(labelText: 'Mã'),
+                decoration: const InputDecoration(labelText: AppStrings.categoryCode),
                 validator: (value) {
                   if (value?.isEmpty ?? true) {
-                    return 'Mã danh mục không được bỏ trống';
+                    return AppStrings.required;
                   }
                   return null;
                 },
               ),
               TextFormField(
                 controller: notesController,
-                decoration: const InputDecoration(labelText: 'Ghi chú'),
+                decoration: const InputDecoration(labelText: AppStrings.notes),
               ),
             ],
           ),
@@ -201,7 +221,7 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Hủy'),
+            child: const Text(AppStrings.cancel),
           ),
           TextButton(
             onPressed: () async {
@@ -213,15 +233,24 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
                   updatedAt: DateTime.now(),
                 );
 
-                await context
-                    .read<CategoryRepository>()
-                    .updateCategory(updatedCategory);
-                if (context.mounted) {
-                  Navigator.pop(context, true);
+                try {
+                  await context.read<CategoryRepository>().updateCategory(updatedCategory);
+                  if (context.mounted) {
+                    Navigator.pop(context, true);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text(AppStrings.categorySaved)),
+                    );
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('${AppStrings.error}: $e')),
+                    );
+                  }
                 }
               }
             },
-            child: const Text('Lưu'),
+            child: const Text(AppStrings.save),
           ),
         ],
       ),
@@ -245,12 +274,11 @@ class CategoryCard extends StatelessWidget {
 
   Future<void> _confirmDelete(BuildContext context) async {
     try {
-      // Check if category has products
       final hasProducts = await context.read<CategoryRepository>().hasProducts(category.id);
       if (hasProducts && context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Không thể xóa danh mục này vì có sản phẩm thuộc danh mục này'),
+            content: Text(AppStrings.cannotDeleteCategory),
             backgroundColor: Colors.red,
           ),
         );
@@ -262,17 +290,19 @@ class CategoryCard extends StatelessWidget {
       final confirmed = await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text('Xóa danh mục'),
-          content: Text('Bạn có chắc muốn xóa danh mục "${category.name}" này?'),
+          title: const Text(AppStrings.deleteCategory),
+          content: Text(
+            AppStrings.confirmDeleteCategory.replaceAll('{name}', category.name),
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('Hủy'),
+              child: const Text(AppStrings.cancel),
             ),
             TextButton(
               onPressed: () => Navigator.pop(context, true),
               style: TextButton.styleFrom(foregroundColor: Colors.red),
-              child: const Text('Xóa'),
+              child: const Text(AppStrings.delete),
             ),
           ],
         ),
@@ -287,7 +317,7 @@ class CategoryCard extends StatelessWidget {
           state?._loadCategories();
 
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Danh mục đã được xóa')),
+            const SnackBar(content: Text(AppStrings.categoryDeleted)),
           );
         }
       }
@@ -295,7 +325,7 @@ class CategoryCard extends StatelessWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Lỗi: ${e.toString()}'),
+            content: Text('${AppStrings.error}: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -326,7 +356,6 @@ class CategoryCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Category Icon and Action Buttons
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -346,20 +375,18 @@ class CategoryCard extends StatelessWidget {
                       IconButton(
                         icon: const Icon(Icons.edit_outlined),
                         onPressed: onEdit,
-                        tooltip: 'Chỉnh sửa danh mục',
+                        tooltip: AppStrings.editCategory,
                       ),
                       IconButton(
                         icon: const Icon(Icons.delete_outline, color: Colors.red),
                         onPressed: () => _confirmDelete(context),
-                        tooltip: 'Xóa danh mục',
+                        tooltip: AppStrings.deleteCategory,
                       ),
                     ],
                   ),
                 ],
               ),
               const SizedBox(height: 16),
-
-              // Category Name
               Text(
                 category.name,
                 style: const TextStyle(
@@ -370,8 +397,6 @@ class CategoryCard extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: 4),
-
-              // Category Code
               Text(
                 'Mã: ${category.code}',
                 style: TextStyle(
@@ -381,8 +406,6 @@ class CategoryCard extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
-
-              // Notes if available
               if (category.notes?.isNotEmpty == true) ...[
                 const SizedBox(height: 8),
                 Text(

@@ -1,7 +1,7 @@
 // lib/main.dart
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:sales_management/core/localization/app_strings.dart';
 import 'package:sales_management/presentation/blocs/settings/settings_state.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'config/routes/app_routes.dart';
@@ -13,6 +13,7 @@ import 'data/datasources/local/database_helper.dart';
 import 'presentation/blocs/product/product_bloc.dart';
 import 'presentation/blocs/cart/cart_bloc.dart';
 import 'presentation/blocs/settings/settings_bloc.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,12 +23,6 @@ void main() async {
 
   // Initialize Database
   await DatabaseHelper.instance.database;
-
-  // Configure portrait orientation only
-  await SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
-    DeviceOrientation.portraitDown,
-  ]);
 
   runApp(MyApp(prefs: prefs));
 }
@@ -78,13 +73,20 @@ class MyApp extends StatelessWidget {
         ],
         child: BlocBuilder<SettingsBloc, SettingsState>(
           builder: (context, state) {
-            return MaterialApp(
-              title: 'Sales Management',
-              themeMode: state.themeMode,
-              theme: ThemeData(
-                primarySwatch: _createMaterialColor(state.primaryColor),
-                useMaterial3: true,
+            final ThemeData baseTheme = ThemeData(
+              useMaterial3: true,
+              primarySwatch: _createMaterialColor(state.primaryColor),
+              primaryColor: state.primaryColor,
+              colorScheme: ColorScheme.fromSeed(
+                seedColor: state.primaryColor,
+                primary: state.primaryColor,
               ),
+            );
+
+            return MaterialApp(
+              title: AppStrings.appName,
+              themeMode: state.themeMode,
+              theme: baseTheme,
               darkTheme: ThemeData.dark(useMaterial3: true).copyWith(
                 primaryColor: state.primaryColor,
                 colorScheme: ColorScheme.dark(
@@ -92,6 +94,19 @@ class MyApp extends StatelessWidget {
                   secondary: state.primaryColor,
                 ),
               ),
+              // Thêm phần localization delegates
+              localizationsDelegates: const [
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              // Hỗ trợ tiếng Việt
+              supportedLocales: const [
+                Locale('vi', 'VN'),
+                Locale('en', 'US'),
+              ],
+              // Mặc định là tiếng Việt
+              locale: const Locale('vi', 'VN'),
               onGenerateRoute: AppRoutes.onGenerateRoute,
               initialRoute: AppRoutes.main,
             );

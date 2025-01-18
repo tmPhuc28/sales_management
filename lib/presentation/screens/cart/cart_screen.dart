@@ -11,6 +11,7 @@ import '../../blocs/cart/cart_bloc.dart';
 import '../../../data/repositories/product_repository.dart';
 import '../../../data/models/product.dart';
 import 'package:intl/intl.dart';
+import '../../../core/localization/app_strings.dart';
 
 class CartScreen extends StatelessWidget {
   const CartScreen({super.key});
@@ -22,16 +23,19 @@ class CartScreen extends StatelessWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Xóa giỏ hàng'),
-        content: const Text('Bạn có chắc muốn xóa giỏ hàng này không?'),
+        title: const Text(AppStrings.clearCart),
+        content: const Text(AppStrings.confirmClearCart),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Hủy'),
+            child: const Text(AppStrings.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Xóa', style: TextStyle(color: Colors.red)),
+            child: const Text(
+              AppStrings.delete,
+              style: TextStyle(color: Colors.red),
+            ),
           ),
         ],
       ),
@@ -47,7 +51,7 @@ class CartScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Giỏ hàng'),
+        title: const Text(AppStrings.cart),
         actions: [
           IconButton(
             icon: const Icon(Icons.delete),
@@ -63,12 +67,12 @@ class CartScreen extends StatelessWidget {
           if (state is CartLoaded) {
             if (state.activeCart.items.isEmpty) {
               return const Center(
-                child: Text('Không có sản phẩm nào trong giỏ hàng'),
+                child: Text(AppStrings.cartEmpty),
               );
             }
             return CartItemList(cart: state.activeCart);
           }
-          return const Center(child: Text('Something went wrong'));
+          return const Center(child: Text('Đã xảy ra lỗi'));
         },
       ),
       bottomNavigationBar: BlocBuilder<CartBloc, CartState>(
@@ -94,14 +98,14 @@ class CartScreen extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text(
-                        'Tổng:',
+                        AppStrings.orderTotal,
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       Text(
-                        NumberFormat.currency(symbol: '\$').format(
+                        NumberFormat.currency(symbol: '₫').format(
                           state.activeCart.total,
                         ),
                         style: const TextStyle(
@@ -120,12 +124,12 @@ class CartScreen extends StatelessWidget {
                           onPressed: state.activeCart.items.isEmpty
                               ? null
                               : () {
-                                  Navigator.pushNamed(context, '/checkout');
-                                },
+                            Navigator.pushNamed(context, '/checkout');
+                          },
                           style: ElevatedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 16),
                           ),
-                          child: const Text('Thanh toán'),
+                          child: const Text(AppStrings.checkout),
                         ),
                       ),
                     ],

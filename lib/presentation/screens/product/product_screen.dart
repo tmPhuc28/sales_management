@@ -2,8 +2,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:sales_management/core/localization/app_strings.dart';
 import 'package:sales_management/presentation/blocs/product/product_event.dart';
-import 'package:sales_management/presentation/widgets/custom_app_bar.dart';
 import 'dart:io';
 import 'package:uuid/uuid.dart';
 import '../../../data/models/product.dart';
@@ -50,7 +50,7 @@ class _ProductScreenState extends State<ProductScreen> {
   Future<void> _loadCategories() async {
     try {
       final categories =
-      await context.read<CategoryRepository>().getAllCategories();
+          await context.read<CategoryRepository>().getAllCategories();
       setState(() {
         _categories = categories;
         if (_selectedCategoryId == null && categories.isNotEmpty) {
@@ -58,7 +58,7 @@ class _ProductScreenState extends State<ProductScreen> {
         }
       });
     } catch (e) {
-      _showErrorSnackBar('Failed to load categories: $e');
+      _showErrorSnackBar('Lỗi không thể tải danh mục: $e');
     }
   }
 
@@ -90,7 +90,7 @@ class _ProductScreenState extends State<ProductScreen> {
         });
       }
     } catch (e) {
-      _showErrorSnackBar('Failed to pick image: $e');
+      _showErrorSnackBar('Lỗi không thể chọn được hình ảnh: $e');
     }
   }
 
@@ -103,7 +103,7 @@ class _ProductScreenState extends State<ProductScreen> {
   Future<void> _submitForm() async {
     if (_formKey.currentState?.validate() ?? false) {
       if (_selectedCategoryId == null) {
-        _showErrorSnackBar('Please select a category');
+        _showErrorSnackBar('Vui lòng chọn danh mục');
         return;
       }
 
@@ -134,7 +134,7 @@ class _ProductScreenState extends State<ProductScreen> {
           Navigator.pop(context);
         }
       } catch (e) {
-        _showErrorSnackBar('Failed to save product: $e');
+        _showErrorSnackBar('Lỗi khi lưu sản phẩm: $e');
       } finally {
         setState(() => _isLoading = false);
       }
@@ -145,17 +145,17 @@ class _ProductScreenState extends State<ProductScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Product'),
-        content: const Text('Are you sure you want to delete this product?'),
+        title: const Text(AppStrings.deleteProduct),
+        content: const Text(AppStrings.confirmDeleteProduct),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: const Text(AppStrings.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Delete'),
+            child: const Text(AppStrings.delete),
           ),
         ],
       ),
@@ -164,14 +164,18 @@ class _ProductScreenState extends State<ProductScreen> {
     if (confirmed == true && mounted) {
       try {
         context.read<ProductBloc>().add(DeleteProduct(widget.product!.id));
-        Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Product deleted successfully')),
-        );
+        if (mounted) {
+          Navigator.pop(context);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text(AppStrings.productDeleted)),
+          );
+        }
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error deleting product: $e')),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('${AppStrings.error}: $e')),
+          );
+        }
       }
     }
   }
@@ -179,196 +183,219 @@ class _ProductScreenState extends State<ProductScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomAppBar(
-        title: widget.product == null ? 'Thêm sản phẩm' : 'Cập nhật',
+      appBar: AppBar(
+        title: Text(widget.product == null
+            ? AppStrings.addProduct
+            : AppStrings.editProduct),
+        actions: widget.product != null
+            ? [
+                IconButton(
+                  icon: const Icon(Icons.delete),
+                  color: Colors.red,
+                  onPressed: () => _showDeleteConfirmation(context),
+                ),
+              ]
+            : null,
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Delete Button for Edit Mode
-              if (widget.product != null)
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: IconButton(
-                    icon: const Icon(Icons.delete),
-                    color: Colors.red,
-                    onPressed: () => _showDeleteConfirmation(context),
-                  ),
-                ),
-
-              // Image Picker
-              Center(
-                child: GestureDetector(
-                  onTap: _pickImage,
-                  child: Container(
-                    width: 200,
-                    height: 200,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[200],
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: _buildImageWidget(),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              // Category Dropdown
-              DropdownButtonFormField<String>(
-                value: _selectedCategoryId,
-                decoration: const InputDecoration(
-                  labelText: 'Category',
-                  border: OutlineInputBorder(),
-                ),
-                items: _categories.map((category) {
-                  return DropdownMenuItem(
-                    value: category.id,
-                    child: Text(category.name),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() => _selectedCategoryId = value);
-                },
-                validator: (value) {
-                  if (value == null) {
-                    return 'Please select a category';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-
-              // Product Name
-              TextFormField(
-                controller: _nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Product Name*',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) {
-                  if (value?.isEmpty ?? true) {
-                    return 'Please enter product name';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-
-              // Product Code
-              TextFormField(
-                controller: _codeController,
-                decoration: const InputDecoration(
-                  labelText: 'Product Code (Optional)',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Prices Row
-              Row(
+          ? const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _sellingPriceController,
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
-                        labelText: 'Selling Price*',
-                        border: OutlineInputBorder(),
-                        prefixText: '\$',
-                      ),
-                      validator: (value) {
-                        if (value?.isEmpty ?? true) {
-                          return 'Required';
-                        }
-                        if (double.tryParse(value!) == null) {
-                          return 'Invalid number';
-                        }
-                        return null;
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: TextFormField(
-                      controller: _costPriceController,
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
-                        labelText: 'Cost Price*',
-                        border: OutlineInputBorder(),
-                        prefixText: '\$',
-                      ),
-                      validator: (value) {
-                        if (value?.isEmpty ?? true) {
-                          return 'Required';
-                        }
-                        if (double.tryParse(value!) == null) {
-                          return 'Invalid number';
-                        }
-                        return null;
-                      },
-                    ),
-                  ),
+                  CircularProgressIndicator(),
+                  SizedBox(height: 16),
+                  Text(AppStrings.loading),
                 ],
               ),
-              const SizedBox(height: 16),
+            )
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(16.0),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Image Picker
+                    Center(
+                      child: GestureDetector(
+                        onTap: _pickImage,
+                        child: Container(
+                          width: 200,
+                          height: 200,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[200],
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: _buildImageWidget(),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
 
-              // Quantity
-              TextFormField(
-                controller: _quantityController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'Quantity*',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) {
-                  if (value?.isEmpty ?? true) {
-                    return 'Required';
-                  }
-                  if (int.tryParse(value!) == null) {
-                    return 'Invalid number';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
+                    // Category Dropdown
+                    DropdownButtonFormField<String>(
+                      value: _selectedCategoryId,
+                      decoration: const InputDecoration(
+                        labelText: AppStrings.category,
+                        border: OutlineInputBorder(),
+                      ),
+                      items: _categories.map((category) {
+                        return DropdownMenuItem(
+                          value: category.id,
+                          child: Text(category.name),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        setState(() => _selectedCategoryId = value);
+                      },
+                      validator: (value) {
+                        if (value == null) {
+                          return AppStrings.required;
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
 
-              // Notes
-              TextFormField(
-                controller: _notesController,
-                maxLines: 3,
-                decoration: const InputDecoration(
-                  labelText: 'Notes (Optional)',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 24),
+                    // Product Name
+                    TextFormField(
+                      controller: _nameController,
+                      decoration: const InputDecoration(
+                        labelText: '${AppStrings.productName}*',
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (value) {
+                        if (value?.isEmpty ?? true) {
+                          return AppStrings.required;
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
 
-              // Submit Button
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _submitForm,
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                  ),
-                  child: Text(
-                    widget.product == null
-                        ? 'Add Product'
-                        : 'Save Changes',
-                  ),
+                    // Product Code
+                    TextFormField(
+                      controller: _codeController,
+                      decoration: const InputDecoration(
+                        labelText: AppStrings.productCode,
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Prices Row
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextFormField(
+                            controller: _costPriceController,
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(
+                              labelText: '${AppStrings.costPrice}*',
+                              border: OutlineInputBorder(),
+                              prefixText: '₫',
+                            ),
+                            validator: _validatePrice,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: TextFormField(
+                            controller: _sellingPriceController,
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(
+                              labelText: '${AppStrings.sellingPrice}*',
+                              border: OutlineInputBorder(),
+                              prefixText: '₫',
+                            ),
+                            validator: _validateSellingPrice,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Quantity
+                    TextFormField(
+                      controller: _quantityController,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        labelText: '${AppStrings.quantity}*',
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: _validateQuantity,
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Notes
+                    TextFormField(
+                      controller: _notesController,
+                      maxLines: 3,
+                      decoration: const InputDecoration(
+                        labelText: AppStrings.notes,
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Submit Button
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _submitForm,
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                        ),
+                        child: Text(
+                          widget.product == null
+                              ? AppStrings.add
+                              : AppStrings.save,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ],
-          ),
-        ),
-      ),
+            ),
     );
+  }
+
+  String? _validatePrice(String? value) {
+    if (value?.isEmpty ?? true) {
+      return AppStrings.required;
+    }
+    if (double.tryParse(value!) == null) {
+      return AppStrings.invalidPrice;
+    }
+    return null;
+  }
+
+  String? _validateSellingPrice(String? value) {
+    final priceError = _validatePrice(value);
+    if (priceError != null) {
+      return priceError;
+    }
+
+    final costPrice = double.tryParse(_costPriceController.text) ?? 0;
+    final sellingPrice = double.tryParse(value!) ?? 0;
+
+    if (sellingPrice < costPrice) {
+      return AppStrings.sellingPriceTooLow;
+    }
+    return null;
+  }
+
+  String? _validateQuantity(String? value) {
+    if (value?.isEmpty ?? true) {
+      return AppStrings.required;
+    }
+    if (int.tryParse(value!) == null) {
+      return AppStrings.invalidQuantity;
+    }
+    if (int.parse(value) < 0) {
+      return AppStrings.invalidQuantity;
+    }
+    return null;
   }
 
   Widget _buildImageWidget() {
@@ -403,7 +430,7 @@ class _ProductScreenState extends State<ProductScreen> {
         Icon(Icons.add_a_photo, size: 50, color: Colors.grey),
         SizedBox(height: 8),
         Text(
-          'Add Photo',
+          'Thêm hình ảnh',
           style: TextStyle(color: Colors.grey),
         ),
       ],

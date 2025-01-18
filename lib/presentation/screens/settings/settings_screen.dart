@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:sales_management/core/localization/app_strings.dart';
 import 'package:sales_management/presentation/widgets/custom_app_bar.dart';
 import '../../blocs/settings/settings_bloc.dart';
 import '../../blocs/settings/settings_event.dart';
@@ -14,9 +15,7 @@ class SettingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const CustomAppBar(
-        title: 'Cài đặt',
-      ),
+      appBar: const CustomAppBar(title: AppStrings.settings),
       body: BlocConsumer<SettingsBloc, SettingsState>(
         listener: (context, state) {
           if (state.error != null) {
@@ -32,9 +31,9 @@ class SettingsScreen extends StatelessWidget {
                 padding: const EdgeInsets.all(16),
                 children: [
                   _buildThemeModeSection(context, state),
-                  const Divider(),
+                  const Divider(height: 32),
                   _buildThemeColorSection(context, state),
-                  const Divider(),
+                  const Divider(height: 32),
                   _buildDataSection(context),
                 ],
               ),
@@ -53,16 +52,13 @@ class SettingsScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Chế độ giao diện',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
+        Text(
+          AppStrings.theme,
+          style: Theme.of(context).textTheme.titleLarge,
         ),
         const SizedBox(height: 16),
         RadioListTile<ThemeMode>(
-          title: const Text('Hệ thống'),
+          title: const Text(AppStrings.systemMode),
           value: ThemeMode.system,
           groupValue: state.themeMode,
           onChanged: (value) {
@@ -70,7 +66,7 @@ class SettingsScreen extends StatelessWidget {
           },
         ),
         RadioListTile<ThemeMode>(
-          title: const Text('Sáng'),
+          title: const Text(AppStrings.lightMode),
           value: ThemeMode.light,
           groupValue: state.themeMode,
           onChanged: (value) {
@@ -78,7 +74,7 @@ class SettingsScreen extends StatelessWidget {
           },
         ),
         RadioListTile<ThemeMode>(
-          title: const Text('Tối'),
+          title: const Text(AppStrings.darkMode),
           value: ThemeMode.dark,
           groupValue: state.themeMode,
           onChanged: (value) {
@@ -97,40 +93,54 @@ class SettingsScreen extends StatelessWidget {
       Colors.purple,
       Colors.orange,
       Colors.teal,
+      Colors.indigo,
+      Colors.pink,
     ];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Màu giao diện',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
+        Text(
+          AppStrings.themeColor,
+          style: Theme.of(context).textTheme.titleLarge,
         ),
         const SizedBox(height: 16),
         Wrap(
           spacing: 16,
           runSpacing: 16,
           children: colors.map((color) {
+            final isSelected = state.primaryColor == color;
             return InkWell(
               onTap: () {
                 context.read<SettingsBloc>().add(ChangeThemeColor(color));
               },
+              borderRadius: BorderRadius.circular(32),
               child: Container(
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
                   color: color,
                   shape: BoxShape.circle,
-                  border: state.primaryColor == color
+                  border: isSelected
                       ? Border.all(
-                    color: Colors.white,
+                    color: Theme.of(context).colorScheme.onSurface,
                     width: 3,
                   )
                       : null,
+                  boxShadow: [
+                    BoxShadow(
+                      color: color.withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 ),
+                child: isSelected
+                    ? const Icon(
+                  Icons.check,
+                  color: Colors.white,
+                )
+                    : null,
               ),
             );
           }).toList(),
@@ -143,30 +153,31 @@ class SettingsScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Quản lý dữ liệu',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
+        Text(
+          AppStrings.dataManagement,
+          style: Theme.of(context).textTheme.titleLarge,
         ),
         const SizedBox(height: 16),
         ListTile(
           leading: const Icon(Icons.upload_file),
-          title: const Text('Thêm dữ liệu vào hệ thống'),
+          title: const Text(AppStrings.importData),
+          subtitle: const Text(AppStrings.importDataDesc),
           onTap: () => _importData(context),
         ),
         ListTile(
           leading: const Icon(Icons.download),
-          title: const Text('Xuất dữ liệu'),
+          title: const Text(AppStrings.exportData),
+          subtitle: const Text(AppStrings.exportDataDesc),
           onTap: () => _exportData(context),
         ),
+        const SizedBox(height: 16),
         ListTile(
           leading: const Icon(Icons.delete_forever, color: Colors.red),
           title: const Text(
-            'Xóa toàn bộ dữ liệu',
+            AppStrings.clearData,
             style: TextStyle(color: Colors.red),
           ),
+          subtitle: const Text(AppStrings.clearDataDesc),
           onTap: () => _confirmClearData(context),
         ),
       ],
@@ -181,17 +192,17 @@ class SettingsScreen extends StatelessWidget {
       );
 
       if (result != null) {
-        context.read<SettingsBloc>().add(ImportData(result.files.single.path!));
         if (context.mounted) {
+          context.read<SettingsBloc>().add(ImportData(result.files.single.path!));
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Dữ liệu đã được thêm vào thành công')),
+            const SnackBar(content: Text(AppStrings.dataImportSuccess)),
           );
         }
       }
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi thêm vào dữ liệu: $e')),
+          SnackBar(content: Text('${AppStrings.error}: $e')),
         );
       }
     }
@@ -204,14 +215,14 @@ class SettingsScreen extends StatelessWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Dữ liệu đã được xuất ra đến: $filePath'),
+            content: Text(AppStrings.dataExportSuccess(filePath)),
           ),
         );
       }
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi xuất dữ liệu: $e')),
+          SnackBar(content: Text('${AppStrings.error}: $e')),
         );
       }
     }
@@ -221,19 +232,17 @@ class SettingsScreen extends StatelessWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Xóa toàn bộ dữ liệu'),
-        content: const Text(
-          'Bạn có chắc muốn xóa toàn bộ dữ liệu. Hành động này không thể hoàn tác.',
-        ),
+        title: const Text(AppStrings.clearData),
+        content: const Text(AppStrings.clearDataConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Hủy'),
+            child: const Text(AppStrings.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Xóa'),
+            child: const Text(AppStrings.clear),
           ),
         ],
       ),
@@ -242,7 +251,7 @@ class SettingsScreen extends StatelessWidget {
     if (confirmed == true && context.mounted) {
       context.read<SettingsBloc>().add(ClearAllData());
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Tất cả dữ liệu đã được xóa')),
+        const SnackBar(content: Text(AppStrings.dataCleared)),
       );
     }
   }

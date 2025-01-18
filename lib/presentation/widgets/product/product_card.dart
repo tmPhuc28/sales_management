@@ -2,144 +2,164 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:sales_management/core/localization/app_strings.dart';
 import 'package:sales_management/data/models/product.dart';
-import 'package:sales_management/presentation/screens/product/product_screen.dart'; // Add this import
 
 class ProductCard extends StatelessWidget {
   final Product product;
+  final VoidCallback? onTap;
+  final VoidCallback? onAddToCart;
+  final bool isEditable;
 
-  const ProductCard({super.key, required this.product});
+  const ProductCard({
+    super.key,
+    required this.product,
+    this.onTap,
+    this.onAddToCart,
+    this.isEditable = false,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final inStock = product.quantity > 0;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final cardWidth = (screenWidth - 48) / 2; // 48 = padding (16 * 2) + spacing (16)
+    final imageSize = cardWidth - 16; // Trừ padding của card
+
     return Card(
-      elevation: 3,
+      clipBehavior: Clip.hardEdge,
+      elevation: 2,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(8),
       ),
-      child: Stack(
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+      child: InkWell(
+        onTap: onTap,
+        child: SizedBox(
+          width: cardWidth,
+          height: cardWidth * 1.4, // Tỷ lệ chiều cao = 1.4 lần chiều rộng
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Image Container with consistent height
-              AspectRatio(
-                aspectRatio: 1, // Ensures the image is square
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius:
-                        const BorderRadius.vertical(top: Radius.circular(12)),
-                    image: product.imagePath != null
-                        ? DecorationImage(
-                            image: FileImage(File(product.imagePath!)),
-                            fit: BoxFit.cover,
-                          )
-                        : null,
-                  ),
-                  child: product.imagePath == null
-                      ? Container(
-                          color: Colors.grey[200],
-                          child: const Icon(Icons.image,
-                              size: 40, color: Colors.grey),
-                        )
-                      : null,
-                ),
+              // Image container
+              SizedBox(
+                height: imageSize,
+                width: imageSize,
+                child: _buildProductImage(),
               ),
 
-              // Product Info Container
-              Padding(
-                padding: const EdgeInsets.all(8),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Product Name
-                    Text(
-                      product.name,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
+              // Product info
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Product name
+                      Text(
+                        product.name,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis, // Avoid text overflow
-                    ),
-                    const SizedBox(height: 4),
+                      const SizedBox(height: 4),
 
-                    // Price
-                    Text(
-                      NumberFormat.currency(symbol: '\$')
-                          .format(product.sellingPrice),
-                      style: const TextStyle(
-                        fontSize: 16,
-                        color: Colors.green,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-
-                    // Stock Status
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: product.quantity > 0
-                            ? Colors.green.withOpacity(0.1)
-                            : Colors.red.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
+                      // Price and add to cart
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Icon(
-                            Icons.inventory_2,
-                            size: 14,
-                            color: product.quantity > 0
-                                ? Colors.green
-                                : Colors.red,
-                          ),
-                          const SizedBox(width: 4),
                           Text(
-                            'Stock: ${product.quantity}',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: product.quantity > 0
-                                  ? Colors.green
-                                  : Colors.red,
-                              fontWeight: FontWeight.w500,
+                            NumberFormat.currency(symbol: '₫', decimalDigits: 0)
+                                .format(product.sellingPrice),
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green,
                             ),
                           ),
+                          if (inStock && onAddToCart != null)
+                            SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: IconButton(
+                                padding: EdgeInsets.zero,
+                                icon: const Icon(Icons.add_shopping_cart, size: 18),
+                                onPressed: onAddToCart,
+                                visualDensity: VisualDensity.compact,
+                              ),
+                            ),
                         ],
                       ),
-                    ),
-                  ],
+
+                      const Spacer(),
+
+                      // Stock status
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: inStock
+                              ? Colors.green.withOpacity(0.1)
+                              : Colors.red.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.inventory_2,
+                              size: 12,
+                              color: inStock ? Colors.green : Colors.red,
+                            ),
+                            const SizedBox(width: 2),
+                            Text(
+                              '${product.quantity}',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: inStock ? Colors.green : Colors.red,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],
           ),
-          // Add edit button in top-right corner
-          Positioned(
-            top: 8,
-            right: 8,
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.8),
-                shape: BoxShape.circle,
-              ),
-              child: IconButton(
-                icon: const Icon(Icons.edit, size: 20),
-                padding: const EdgeInsets.all(8),
-                constraints: const BoxConstraints(),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ProductScreen(product: product),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ),
-        ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProductImage() {
+    if (product.imagePath != null) {
+      return Image.file(
+        File(product.imagePath!),
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return _buildPlaceholder();
+        },
+      );
+    }
+    return _buildPlaceholder();
+  }
+
+  Widget _buildPlaceholder() {
+    return Container(
+      color: Colors.grey[200],
+      child: const Center(
+        child: Icon(
+          Icons.image,
+          size: 32,
+          color: Colors.grey,
+        ),
       ),
     );
   }
