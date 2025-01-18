@@ -1,13 +1,11 @@
-// lib/presentation/widgets/cart/cart_panel.dart
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:sales_management/data/models/cart.dart';
-import 'package:sales_management/data/repositories/product_repository.dart';
 import 'package:sales_management/presentation/blocs/cart/cart_bloc.dart';
 import 'package:sales_management/presentation/blocs/cart/cart_event.dart';
-import 'package:sales_management/core/localization/app_strings.dart';
 import 'package:sales_management/presentation/blocs/cart/cart_state.dart';
+import 'package:sales_management/core/localization/app_strings.dart';
+import 'package:provider/provider.dart';
 
 class CartPanel extends StatelessWidget {
   final VoidCallback onClose;
@@ -23,82 +21,118 @@ class CartPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     if (cartState is! CartLoaded) return const SizedBox.shrink();
     final state = cartState as CartLoaded;
+    final screenHeight = MediaQuery.of(context).size.height;
 
-    return Material(
-      color: Colors.transparent,
-      child: Stack(
-        children: [
-          // Backdrop with animation
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            color: Colors.black54,
-            child: GestureDetector(
+    return GestureDetector(
+      onVerticalDragUpdate: (details) {
+        // Nếu kéo xuống với khoảng cách đủ lớn
+        if (details.primaryDelta! > 10) {
+          onClose();
+        }
+      },
+      child: Material(
+        color: Colors.transparent,
+        child: Stack(
+          children: [
+            // Backdrop với animation
+            GestureDetector(
               onTap: onClose,
-              child: const SizedBox.expand(),
+              child: Container(
+                color: Colors.black54,
+              ),
             ),
-          ),
 
-          // Panel with sliding animation
-          AnimatedPositioned(
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeInOut,
-            right: 0,
-            top: 0,
-            bottom: 0,
-            width: 320,
-            child: Card(
-              margin: EdgeInsets.zero,
-              elevation: 8,
-              shape: const RoundedRectangleBorder(
-                borderRadius: BorderRadius.horizontal(left: Radius.circular(16)),
-              ),
-              child: Column(
-                children: [
-                  _buildHeader(context, state),
-                  _buildActionButtons(context, state),
-                  Expanded(
-                    child: state.allCarts.isEmpty
-                        ? _buildEmptyState()
-                        : _buildCartList(context, state),
+            // Panel với animation trượt từ dưới lên
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              height: screenHeight * 0.68, // Chiếm 60% màn hình
+              child: TweenAnimationBuilder<double>(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeOutCubic,
+                tween: Tween(begin: screenHeight, end: 0),
+                builder: (context, value, child) {
+                  return Transform.translate(
+                    offset: Offset(0, value),
+                    child: child,
+                  );
+                },
+                child: Container(
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius:
+                        BorderRadius.vertical(top: Radius.circular(20)),
                   ),
-                ],
+                  child: Column(
+                    children: [
+                      _buildHandle(),
+                      _buildHeader(context, state),
+                      _buildActionButtons(context, state),
+                      Expanded(
+                        child: state.allCarts.isEmpty
+                            ? _buildEmptyState()
+                            : _buildCartList(context, state),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHandle() {
+    return Container(
+      width: 40,
+      height: 4,
+      margin: const EdgeInsets.symmetric(vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.grey[300],
+        borderRadius: BorderRadius.circular(2),
       ),
     );
   }
 
   Widget _buildHeader(BuildContext context, CartLoaded state) {
     return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        border: Border(
-          bottom: BorderSide(color: Colors.grey.shade200),
-        ),
-      ),
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
       child: Row(
         children: [
           Icon(
             Icons.shopping_cart,
             color: Theme.of(context).primaryColor,
+            size: 28,
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(
-              '${AppStrings.cart} (${state.allCarts.length})',
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${AppStrings.cart} (${state.allCarts.length})',
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                if (state.activeCart.items.isNotEmpty)
+                  Text(
+                    '${state.activeCart.items.values.fold(0, (sum, item) => sum + item.quantity)} sản phẩm',
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: 14,
+                    ),
+                  ),
+              ],
             ),
           ),
           IconButton(
             icon: const Icon(Icons.close),
             onPressed: onClose,
-            tooltip: AppStrings.close,
             visualDensity: VisualDensity.compact,
           ),
         ],
@@ -107,8 +141,15 @@ class CartPanel extends StatelessWidget {
   }
 
   Widget _buildActionButtons(BuildContext context, CartLoaded state) {
-    return Padding(
-      padding: const EdgeInsets.all(16),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        border: Border(
+          top: BorderSide(color: Colors.grey[200]!),
+          bottom: BorderSide(color: Colors.grey[200]!),
+        ),
+      ),
       child: Row(
         children: [
           Expanded(
@@ -116,20 +157,25 @@ class CartPanel extends StatelessWidget {
               onPressed: () {
                 context.read<CartBloc>().add(const CreateNewCart());
               },
-              icon: const Icon(Icons.add_shopping_cart, size: 18),
+              icon: const Icon(Icons.add_shopping_cart, size: 20),
               label: const Text(AppStrings.addToCart),
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 12),
+                backgroundColor: Theme.of(context).primaryColor,
+                foregroundColor: Colors.white,
               ),
             ),
           ),
           if (state.allCarts.isNotEmpty) ...[
-            const SizedBox(width: 8),
-            IconButton(
+            const SizedBox(width: 12),
+            IconButton.filled(
               onPressed: () => _showClearCartsDialog(context),
               icon: const Icon(Icons.delete_sweep),
               tooltip: AppStrings.clearCart,
-              color: Colors.red,
+              style: IconButton.styleFrom(
+                backgroundColor: Colors.red[50],
+                foregroundColor: Colors.red,
+              ),
             ),
           ],
         ],
@@ -142,10 +188,10 @@ class CartPanel extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(
+          Icon(
             Icons.shopping_cart_outlined,
             size: 64,
-            color: Colors.grey,
+            color: Colors.grey[400],
           ),
           const SizedBox(height: 16),
           Text(
@@ -153,6 +199,7 @@ class CartPanel extends StatelessWidget {
             style: TextStyle(
               color: Colors.grey[600],
               fontSize: 16,
+              fontWeight: FontWeight.w500,
             ),
           ),
           const SizedBox(height: 8),
@@ -171,9 +218,9 @@ class CartPanel extends StatelessWidget {
 
   Widget _buildCartList(BuildContext context, CartLoaded state) {
     return ListView.separated(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       itemCount: state.allCarts.length,
-      separatorBuilder: (context, index) => const SizedBox(height: 8),
+      separatorBuilder: (context, index) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
         final cart = state.allCarts.values.elementAt(index);
         final isActive = cart.id == state.activeCart.id;
@@ -183,124 +230,132 @@ class CartPanel extends StatelessWidget {
   }
 
   Widget _buildCartItem(
-      BuildContext context,
-      Cart cart,
-      bool isActive,
-      CartLoaded state,
-      ) {
-    final itemCount = cart.items.values.fold(0, (sum, item) => sum + item.quantity);
+    BuildContext context,
+    Cart cart,
+    bool isActive,
+    CartLoaded state,
+  ) {
+    final itemCount =
+        cart.items.values.fold(0, (sum, item) => sum + item.quantity);
 
     return Dismissible(
       key: Key(cart.id),
       direction: DismissDirection.endToStart,
-      confirmDismiss: (direction) => _showDeleteCartDialog(context),
-      background: Container(
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: 16),
-        color: Colors.red,
-        child: const Icon(
-          Icons.delete,
-          color: Colors.white,
-        ),
-      ),
-      child: InkWell(
-        onTap: () {
-          if (!isActive) {
-            context.read<CartBloc>().add(SwitchCart(cart.id));
+      confirmDismiss: (direction) async {
+        final result = await _showDeleteCartDialog(context);
+        if (result == true) {
+          if (context.mounted) {
+            // Xóa giỏ hàng
+            context.read<CartBloc>().add(DeleteCart(cart.id));
+            // Nếu không còn giỏ hàng nào, đóng panel
+            if (state.allCarts.length <= 1) {
+              onClose();
+            }
           }
-        },
-        child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 16),
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: isActive ? Theme.of(context).primaryColor.withOpacity(0.1) : null,
-            border: Border.all(
-              color: isActive ? Theme.of(context).primaryColor : Colors.grey.shade300,
-            ),
-            borderRadius: BorderRadius.circular(12),
+        }
+        return result;
+      },
+      background: Container(
+        padding: const EdgeInsets.only(right: 20),
+        alignment: Alignment.centerRight,
+        decoration: BoxDecoration(
+          color: Colors.red,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: const Icon(Icons.delete, color: Colors.white),
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          color: isActive
+              ? Theme.of(context).primaryColor.withOpacity(0.05)
+              : Colors.white,
+          border: Border.all(
+            color:
+                isActive ? Theme.of(context).primaryColor : Colors.grey[200]!,
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () {
+              if (!isActive) {
+                context.read<CartBloc>().add(SwitchCart(cart.id));
+              }
+            },
+            onDoubleTap: () {
+              onClose();
+              Navigator.pushNamed(context, '/cart');
+            },
+            borderRadius: BorderRadius.circular(12),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
                 children: [
-                  // Cart icon with count
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isActive
-                          ? Theme.of(context).primaryColor.withOpacity(0.2)
-                          : Colors.grey.shade100,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: isActive
+                              ? Theme.of(context).primaryColor.withOpacity(0.1)
+                              : Colors.grey[100],
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(
                           Icons.shopping_cart,
-                          size: 16,
                           color: isActive
                               ? Theme.of(context).primaryColor
                               : Colors.grey[600],
+                          size: 20,
                         ),
-                        const SizedBox(width: 4),
-                        Text(
-                          itemCount.toString(),
-                          style: TextStyle(
-                            color: isActive
-                                ? Theme.of(context).primaryColor
-                                : Colors.grey[600],
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-
-                  // Cart info
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '${AppStrings.cart} #${cart.id.substring(0, 8)}',
-                          style: TextStyle(
-                            fontWeight: isActive ? FontWeight.bold : null,
-                            color: isActive ? Theme.of(context).primaryColor : null,
-                          ),
-                        ),
-                        Text(
-                          NumberFormat.currency(symbol: '₫').format(cart.total),
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 13,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // View cart button for active cart
-                  if (isActive && itemCount > 0)
-                    TextButton.icon(
-                      onPressed: () {
-                        onClose();
-                        Navigator.pushNamed(context, '/cart');
-                      },
-                      icon: const Icon(Icons.shopping_bag_outlined, size: 18),
-                      label: const Text('Xem'),
-                      style: TextButton.styleFrom(
-                        visualDensity: VisualDensity.compact,
-                        foregroundColor: Theme.of(context).primaryColor,
                       ),
-                    ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '${AppStrings.cart} #${cart.id.substring(0, 8)}',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                color: isActive
+                                    ? Theme.of(context).primaryColor
+                                    : Colors.black87,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '$itemCount sản phẩm · ${NumberFormat.currency(symbol: '₫', decimalDigits: 0).format(cart.total)}',
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: 13,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (isActive && itemCount > 0)
+                        ElevatedButton(
+                          onPressed: () {
+                            onClose();
+                            Navigator.pushNamed(context, '/cart');
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Theme.of(context).primaryColor,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
+                          ),
+                          child: const Text('Xem giỏ hàng'),
+                        ),
+                    ],
+                  ),
                 ],
               ),
-            ],
+            ),
           ),
         ),
       ),
