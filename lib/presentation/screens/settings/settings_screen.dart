@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:sales_management/core/localization/app_strings.dart';
 import 'package:sales_management/presentation/widgets/custom_app_bar.dart';
+import 'package:path_provider/path_provider.dart';
 import '../../blocs/settings/settings_bloc.dart';
 import '../../blocs/settings/settings_event.dart';
 import '../../blocs/settings/settings_state.dart';
@@ -92,9 +93,7 @@ class SettingsScreen extends StatelessWidget {
       Colors.green,
       Colors.purple,
       Colors.orange,
-      Colors.teal,
       Colors.indigo,
-      Colors.pink,
     ];
 
     return Column(
@@ -123,9 +122,9 @@ class SettingsScreen extends StatelessWidget {
                   shape: BoxShape.circle,
                   border: isSelected
                       ? Border.all(
-                    color: Theme.of(context).colorScheme.onSurface,
-                    width: 3,
-                  )
+                          color: Theme.of(context).colorScheme.onSurface,
+                          width: 3,
+                        )
                       : null,
                   boxShadow: [
                     BoxShadow(
@@ -137,9 +136,9 @@ class SettingsScreen extends StatelessWidget {
                 ),
                 child: isSelected
                     ? const Icon(
-                  Icons.check,
-                  color: Colors.white,
-                )
+                        Icons.check,
+                        color: Colors.white,
+                      )
                     : null,
               ),
             );
@@ -170,6 +169,12 @@ class SettingsScreen extends StatelessWidget {
           subtitle: const Text(AppStrings.exportDataDesc),
           onTap: () => _exportData(context),
         ),
+        ListTile(
+          leading: const Icon(Icons.folder_open),
+          title: const Text('Vị trí file dữ liệu'),
+          subtitle: const Text('Xem vị trí lưu trữ file dữ liệu'),
+          onTap: () => _showBackupLocation(context),
+        ),
         const SizedBox(height: 16),
         ListTile(
           leading: const Icon(Icons.delete_forever, color: Colors.red),
@@ -193,7 +198,9 @@ class SettingsScreen extends StatelessWidget {
 
       if (result != null) {
         if (context.mounted) {
-          context.read<SettingsBloc>().add(ImportData(result.files.single.path!));
+          context
+              .read<SettingsBloc>()
+              .add(ImportData(result.files.single.path!));
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text(AppStrings.dataImportSuccess)),
           );
@@ -210,12 +217,58 @@ class SettingsScreen extends StatelessWidget {
 
   Future<void> _exportData(BuildContext context) async {
     try {
-      final filePath = await context.read<SettingsRepository>().getBackupFilePath();
+      final filePath =
+          await context.read<SettingsRepository>().getBackupFilePath();
       context.read<SettingsBloc>().add(ExportData(filePath));
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(AppStrings.dataExportSuccess(filePath)),
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${AppStrings.error}: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _showBackupLocation(BuildContext context) async {
+    try {
+      final directory = await getApplicationDocumentsDirectory();
+      if (context.mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Vị trí lưu trữ'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'File dữ liệu được lưu tại:',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                Text(directory.path),
+                const SizedBox(height: 16),
+                const Text(
+                  'Tên file:',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                const Text('backup_[timestamp].json'),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Đóng'),
+              ),
+            ],
           ),
         );
       }
