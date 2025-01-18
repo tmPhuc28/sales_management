@@ -184,6 +184,7 @@ class _ProductScreenState extends State<ProductScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        centerTitle: true,
         title: Text(widget.product == null
             ? AppStrings.addProduct
             : AppStrings.editProduct),

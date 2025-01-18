@@ -19,6 +19,7 @@ class AppStrings {
   static const String search = 'Tìm kiếm';
   static const String code = 'Mã';
   static const String noData = 'Không có dữ liệu';
+  static const String retry = 'Thử lại';
 
   // Navigation
   static const String home = 'Trang chủ';
@@ -40,7 +41,8 @@ class AppStrings {
   static const String stock = 'Tồn kho';
   static const String category = 'Danh mục';
   static const String noProducts = 'Chưa có sản phẩm';
-  static const String confirmDeleteProduct = 'Bạn có chắc muốn xóa sản phẩm này?';
+  static const String confirmDeleteProduct =
+      'Bạn có chắc muốn xóa sản phẩm này?';
   static const String productSaved = 'Đã lưu sản phẩm';
   static const String productDeleted = 'Đã xóa sản phẩm';
   static const String addImage = 'Thêm hình ảnh';
@@ -53,14 +55,16 @@ class AppStrings {
   static const String clearCart = 'Xóa giỏ hàng';
   static const String confirmClearCart = 'Bạn có chắc muốn xóa giỏ hàng này?';
   static const String notEnoughStock = 'Không đủ số lượng trong kho';
-  static String addedToCart(String productName) => 'Đã thêm $productName vào giỏ hàng';
+  static String addedToCart(String productName) =>
+      'Đã thêm $productName vào giỏ hàng';
 
   // Checkout
   static const String checkout = 'Thanh toán';
   static const String price = 'Giá';
   static const String orderSummary = 'Thông tin đơn hàng';
   static const String orderNotes = 'Ghi chú đơn hàng';
-  static const String orderNotesHint = 'Nhập ghi chú cho đơn hàng (không bắt buộc)';
+  static const String orderNotesHint =
+      'Nhập ghi chú cho đơn hàng (không bắt buộc)';
   static const String completeOrder = 'Hoàn tất đơn hàng';
   static const String orderSuccess = 'Đặt hàng thành công';
   static const String totalItems = 'Tổng số sản phẩm';
@@ -73,8 +77,10 @@ class AppStrings {
   static const String categoryName = 'Tên danh mục';
   static const String categoryCode = 'Mã danh mục';
   static const String noCategories = 'Chưa có danh mục';
-  static const String confirmDeleteCategory = 'Bạn có chắc muốn xóa danh mục này?';
-  static const String cannotDeleteCategory = 'Không thể xóa danh mục đang có sản phẩm';
+  static const String confirmDeleteCategory =
+      'Bạn có chắc muốn xóa danh mục này?';
+  static const String cannotDeleteCategory =
+      'Không thể xóa danh mục đang có sản phẩm';
   static const String categorySaved = 'Đã lưu danh mục';
   static const String categoryDeleted = 'Đã xóa danh mục';
 
@@ -83,7 +89,7 @@ class AppStrings {
   static const String orderId = 'Mã đơn hàng';
   static const String orderDate = 'Ngày đặt hàng';
   static const String orderItems = 'Sản phẩm trong đơn';
-  static const  String orderTotal = 'Tổng tiền';
+  static const String orderTotal = 'Tổng tiền';
   static const String orderStatus = 'Trạng thái đơn hàng';
   static const String noOrders = 'Chưa có đơn hàng';
   static const String orderPending = 'Chờ xử lý';
@@ -92,7 +98,7 @@ class AppStrings {
   static const String orderCancelled = 'Đã hủy';
 
   // Statistics
-  static const String sales  = 'Doanh số';
+  static const String sales = 'Doanh số';
   static const String overview = 'Tổng quan';
   static const String totalRevenue = 'Doanh thu';
   static const String totalOrders = 'Số đơn hàng';
@@ -127,9 +133,11 @@ class AppStrings {
   static const String importDataDesc = 'Nhập dữ liệu từ file backup';
   static const String exportDataDesc = 'Tạo file backup dữ liệu';
   static const String clearDataDesc = 'Xóa toàn bộ dữ liệu trong ứng dụng';
-  static const String clearDataConfirm = 'Bạn có chắc muốn xóa toàn bộ dữ liệu? Hành động này không thể hoàn tác.';
+  static const String clearDataConfirm =
+      'Bạn có chắc muốn xóa toàn bộ dữ liệu? Hành động này không thể hoàn tác.';
   static const String dataImportSuccess = 'Nhập dữ liệu thành công';
-  static String dataExportSuccess(String path) => 'Đã xuất dữ liệu ra file: $path';
+  static String dataExportSuccess(String path) =>
+      'Đã xuất dữ liệu ra file: $path';
   static const String dataCleared = 'Đã xóa toàn bộ dữ liệu';
   static const String clear = 'Xóa';
 
@@ -138,7 +146,8 @@ class AppStrings {
   static const String invalidNumber = 'Số không hợp lệ';
   static const String invalidPrice = 'Giá không hợp lệ';
   static const String invalidQuantity = 'Số lượng không hợp lệ';
-  static const String sellingPriceTooLow = 'Giá bán phải lớn hơn hoặc bằng giá vốn';
+  static const String sellingPriceTooLow =
+      'Giá bán phải lớn hơn hoặc bằng giá vốn';
   static const String duplicateCode = 'Mã này đã tồn tại';
 
   // Date Range
@@ -158,7 +167,4 @@ class AppStrings {
   static const String addNotes = 'Thêm ghi chú';
   static const String notesHint = 'Nhập ghi chú';
   static const String notesOptional = 'Ghi chú (không bắt buộc)';
-
-  static String retry = 'Thử lại';
-
 }

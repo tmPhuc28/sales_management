@@ -9,6 +9,7 @@ import 'package:sales_management/presentation/blocs/cart/cart_event.dart';
 import 'package:sales_management/presentation/blocs/cart/cart_state.dart';
 import 'package:sales_management/presentation/blocs/product/product_bloc.dart';
 import 'package:sales_management/presentation/blocs/product/product_event.dart';
+import 'package:sales_management/presentation/widgets/custom_app_bar.dart';
 import '../../blocs/cart/cart_bloc.dart';
 import '../../../data/repositories/product_repository.dart';
 import '../../../data/repositories/order_repository.dart';
@@ -88,9 +89,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(AppStrings.checkout),
-      ),
+      appBar: const CustomAppBar(title: AppStrings.checkout),
       body: BlocBuilder<CartBloc, CartState>(
         builder: (context, state) {
           if (state is CartLoaded) {
@@ -120,7 +119,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     decoration: const InputDecoration(
                       hintText: AppStrings.orderNotesHint,
                       border: OutlineInputBorder(),
-                      filled: true,
                     ),
                   ),
                   const SizedBox(height: 24),

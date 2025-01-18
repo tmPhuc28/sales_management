@@ -175,7 +175,6 @@ class SettingsScreen extends StatelessWidget {
           subtitle: const Text('Xem vị trí lưu trữ file dữ liệu'),
           onTap: () => _showBackupLocation(context),
         ),
-        const SizedBox(height: 16),
         ListTile(
           leading: const Icon(Icons.delete_forever, color: Colors.red),
           title: const Text(

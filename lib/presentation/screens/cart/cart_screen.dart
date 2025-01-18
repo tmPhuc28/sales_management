@@ -7,6 +7,7 @@ import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:sales_management/data/models/cart.dart';
 import 'package:sales_management/presentation/blocs/cart/cart_event.dart';
 import 'package:sales_management/presentation/blocs/cart/cart_state.dart';
+import 'package:sales_management/presentation/widgets/custom_app_bar.dart';
 import '../../blocs/cart/cart_bloc.dart';
 import '../../../data/repositories/product_repository.dart';
 import '../../../data/models/product.dart';
@@ -50,15 +51,7 @@ class CartScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(AppStrings.cart),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.delete),
-            onPressed: () => _confirmDeleteCart(context),
-          ),
-        ],
-      ),
+      appBar: const CustomAppBar(title: AppStrings.cart),
       body: BlocBuilder<CartBloc, CartState>(
         builder: (context, state) {
           if (state is CartLoading) {
@@ -124,8 +117,8 @@ class CartScreen extends StatelessWidget {
                           onPressed: state.activeCart.items.isEmpty
                               ? null
                               : () {
-                            Navigator.pushNamed(context, '/checkout');
-                          },
+                                  Navigator.pushNamed(context, '/checkout');
+                                },
                           style: ElevatedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 16),
                           ),

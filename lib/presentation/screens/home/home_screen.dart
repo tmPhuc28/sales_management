@@ -1,5 +1,5 @@
 // lib/presentation/screens/home/home_screen.dart
-import 'dart:io';
+
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -78,7 +78,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   }
                 },
                 onCartTap: () => setState(() => _showCartPanel = true),
-                onAddProductTap: () => Navigator.pushNamed(context, '/add-product'),
+                onAddProductTap: () =>
+                    Navigator.pushNamed(context, '/add-product'),
                 cartItemCount: _getCartItemCount(context),
               ),
 
@@ -89,8 +90,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 onCategorySelected: (categoryId) {
                   setState(() => _selectedCategoryId = categoryId);
                   context.read<ProductBloc>().add(
-                    LoadProducts(categoryId: categoryId),
-                  );
+                        LoadProducts(categoryId: categoryId),
+                      );
                 },
               ),
 
@@ -113,13 +114,16 @@ class _HomeScreenState extends State<HomeScreen> {
 
                       return GridView.builder(
                         padding: const EdgeInsets.all(16),
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 2,
-                          childAspectRatio: 0.7, // Điều chỉnh tỷ lệ để hiển thị 6 sản phẩm
+                          childAspectRatio:
+                              0.7, // Điều chỉnh tỷ lệ để hiển thị 6 sản phẩm
                           mainAxisSpacing: 16,
                           crossAxisSpacing: 16,
                         ),
-                        itemCount: min(state.products.length, 6), // Giới hạn 6 sản phẩm
+                        itemCount: min(
+                            state.products.length, 6), // Giới hạn 6 sản phẩm
                         itemBuilder: (context, index) {
                           final product = state.products[index];
                           return ProductCard(
@@ -127,18 +131,23 @@ class _HomeScreenState extends State<HomeScreen> {
                             onTap: () => Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => ProductScreen(product: product),
+                                builder: (context) =>
+                                    ProductScreen(product: product),
                               ),
                             ),
                             onAddToCart: () {
                               if (product.quantity > 0) {
-                                context.read<CartBloc>().add(AddToCart(product));
+                                context
+                                    .read<CartBloc>()
+                                    .add(AddToCart(product));
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
-                                    content: Text(AppStrings.addedToCart(product.name)),
+                                    content: Text(
+                                        AppStrings.addedToCart(product.name)),
                                     action: SnackBarAction(
                                       label: AppStrings.viewCart,
-                                      onPressed: () => setState(() => _showCartPanel = true),
+                                      onPressed: () =>
+                                          setState(() => _showCartPanel = true),
                                     ),
                                   ),
                                 );
@@ -184,7 +193,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     LoadProducts(categoryId: _selectedCategoryId),
                   );
             },
-            child: Text(AppStrings.retry),
+            child: const Text(AppStrings.retry),
           ),
         ],
       ),

@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:sales_management/core/localization/app_strings.dart';
 import 'package:sales_management/data/models/product.dart';
 
 class ProductCard extends StatelessWidget {
@@ -23,7 +22,8 @@ class ProductCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final inStock = product.quantity > 0;
     final screenWidth = MediaQuery.of(context).size.width;
-    final cardWidth = (screenWidth - 48) / 2; // 48 = padding (16 * 2) + spacing (16)
+    final cardWidth =
+        (screenWidth - 48) / 2; // 48 = padding (16 * 2) + spacing (16)
     final imageSize = cardWidth - 16; // Trừ padding của card
 
     return Card(
@@ -38,7 +38,7 @@ class ProductCard extends StatelessWidget {
           width: cardWidth,
           height: cardWidth * 1.4, // Tỷ lệ chiều cao = 1.4 lần chiều rộng
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               // Image container
               SizedBox(
@@ -86,7 +86,8 @@ class ProductCard extends StatelessWidget {
                               height: 24,
                               child: IconButton(
                                 padding: EdgeInsets.zero,
-                                icon: const Icon(Icons.add_shopping_cart, size: 18),
+                                icon: const Icon(Icons.add_shopping_cart,
+                                    size: 24),
                                 onPressed: onAddToCart,
                                 visualDensity: VisualDensity.compact,
                               ),

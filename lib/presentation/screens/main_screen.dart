@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'home/home_screen.dart';
 import 'statistics/sales_statistics_screen.dart';
-import 'category/category_list_screen.dart';
+import 'category/category_screen.dart';
 import 'order/order_list_screen.dart';
 import 'settings/settings_screen.dart';
 
@@ -20,7 +20,7 @@ class _MainScreenState extends State<MainScreen> {
     const HomeScreen(),
     const OrderListScreen(),
     const SalesStatisticsScreen(),
-    const CategoryListScreen(),
+    const CategoryScreen(),
     const SettingsScreen(),
   ];
 
