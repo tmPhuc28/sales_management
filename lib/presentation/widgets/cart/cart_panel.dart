@@ -7,7 +7,7 @@ import 'package:sales_management/presentation/blocs/cart/cart_state.dart';
 import 'package:sales_management/core/localization/app_strings.dart';
 import 'package:provider/provider.dart';
 
-class CartPanel extends StatelessWidget {
+class CartPanel extends StatefulWidget {
   final VoidCallback onClose;
   final CartState cartState;
 
@@ -18,51 +18,98 @@ class CartPanel extends StatelessWidget {
   });
 
   @override
+  State<CartPanel> createState() => _CartPanelState();
+}
+
+class _CartPanelState extends State<CartPanel> with SingleTickerProviderStateMixin {
+  late AnimationController _dragController;
+  double _dragOffset = 0;
+  final double _dismissThreshold = 150.0;
+
+  @override
+  void initState() {
+    super.initState();
+    _dragController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+  }
+
+  @override
+  void dispose() {
+    _dragController.dispose();
+    super.dispose();
+  }
+
+  void _handleDragUpdate(DragUpdateDetails details) {
+    setState(() {
+      _dragOffset += details.primaryDelta!;
+      if (_dragOffset < 0) _dragOffset = 0;
+
+      // Cập nhật giá trị animation controller
+      _dragController.value = _dragOffset / _dismissThreshold;
+    });
+  }
+
+  void _handleDragEnd(DragEndDetails details) {
+    final velocity = details.primaryVelocity ?? 0;
+
+    if (_dragOffset > _dismissThreshold || velocity > 700) {
+      // Hoàn thành animation và đóng panel
+      _dragController.forward().then((_) => widget.onClose());
+    } else {
+      // Reset về vị trí ban đầu
+      setState(() {
+        _dragOffset = 0;
+      });
+      _dragController.reverse();
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    if (cartState is! CartLoaded) return const SizedBox.shrink();
-    final state = cartState as CartLoaded;
+    if (widget.cartState is! CartLoaded) return const SizedBox.shrink();
+    final state = widget.cartState as CartLoaded;
     final screenHeight = MediaQuery.of(context).size.height;
 
-    return GestureDetector(
-      onVerticalDragUpdate: (details) {
-        // Nếu kéo xuống với khoảng cách đủ lớn
-        if (details.primaryDelta! > 10) {
-          onClose();
-        }
-      },
-      child: Material(
-        color: Colors.transparent,
-        child: Stack(
-          children: [
-            // Backdrop với animation
-            GestureDetector(
-              onTap: onClose,
-              child: Container(
-                color: Colors.black54,
-              ),
+    return Material(
+      color: Colors.transparent,
+      child: Stack(
+        children: [
+          // Backdrop với animation opacity
+          GestureDetector(
+            onTap: widget.onClose,
+            child: AnimatedBuilder(
+              animation: _dragController,
+              builder: (context, child) {
+                return Container(
+                  color: Colors.black54.withOpacity(0.54 * (1 - _dragController.value)),
+                );
+              },
             ),
+          ),
 
-            // Panel với animation trượt từ dưới lên
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              height: screenHeight * 0.68, // Chiếm 60% màn hình
-              child: TweenAnimationBuilder<double>(
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeOutCubic,
-                tween: Tween(begin: screenHeight, end: 0),
-                builder: (context, value, child) {
+          // Panel với animation trượt
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            height: screenHeight * 0.68,
+            child: GestureDetector(
+              onVerticalDragUpdate: _handleDragUpdate,
+              onVerticalDragEnd: _handleDragEnd,
+              child: AnimatedBuilder(
+                animation: _dragController,
+                builder: (context, child) {
                   return Transform.translate(
-                    offset: Offset(0, value),
+                    offset: Offset(0, _dragOffset),
                     child: child,
                   );
                 },
                 child: Container(
                   decoration: const BoxDecoration(
                     color: Colors.white,
-                    borderRadius:
-                        BorderRadius.vertical(top: Radius.circular(20)),
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
                   ),
                   child: Column(
                     children: [
@@ -79,8 +126,8 @@ class CartPanel extends StatelessWidget {
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -132,7 +179,7 @@ class CartPanel extends StatelessWidget {
           ),
           IconButton(
             icon: const Icon(Icons.close),
-            onPressed: onClose,
+            onPressed: widget.onClose,
             visualDensity: VisualDensity.compact,
           ),
         ],
@@ -230,13 +277,12 @@ class CartPanel extends StatelessWidget {
   }
 
   Widget _buildCartItem(
-    BuildContext context,
-    Cart cart,
-    bool isActive,
-    CartLoaded state,
-  ) {
-    final itemCount =
-        cart.items.values.fold(0, (sum, item) => sum + item.quantity);
+      BuildContext context,
+      Cart cart,
+      bool isActive,
+      CartLoaded state,
+      ) {
+    final itemCount = cart.items.values.fold(0, (sum, item) => sum + item.quantity);
 
     return Dismissible(
       key: Key(cart.id),
@@ -249,7 +295,7 @@ class CartPanel extends StatelessWidget {
             context.read<CartBloc>().add(DeleteCart(cart.id));
             // Nếu không còn giỏ hàng nào, đóng panel
             if (state.allCarts.length <= 1) {
-              onClose();
+              widget.onClose();
             }
           }
         }
@@ -270,8 +316,7 @@ class CartPanel extends StatelessWidget {
               ? Theme.of(context).primaryColor.withOpacity(0.05)
               : Colors.white,
           border: Border.all(
-            color:
-                isActive ? Theme.of(context).primaryColor : Colors.grey[200]!,
+            color: isActive ? Theme.of(context).primaryColor : Colors.grey[200]!,
           ),
           borderRadius: BorderRadius.circular(12),
         ),
@@ -284,7 +329,7 @@ class CartPanel extends StatelessWidget {
               }
             },
             onDoubleTap: () {
-              onClose();
+              widget.onClose();
               Navigator.pushNamed(context, '/cart');
             },
             borderRadius: BorderRadius.circular(12),
@@ -338,7 +383,7 @@ class CartPanel extends StatelessWidget {
                       if (isActive && itemCount > 0)
                         ElevatedButton(
                           onPressed: () {
-                            onClose();
+                            widget.onClose();
                             Navigator.pushNamed(context, '/cart');
                           },
                           style: ElevatedButton.styleFrom(
@@ -405,6 +450,7 @@ class CartPanel extends StatelessWidget {
 
     if (confirmed == true && context.mounted) {
       context.read<CartBloc>().add(ClearAllCarts());
+      widget.onClose();
     }
   }
 }
