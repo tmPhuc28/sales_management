@@ -161,18 +161,4 @@ class AppStrings {
 
   static String retry = 'Thử lại';
 
-  static var totalProducts = 'Tổng sản phẩm';
-
-  static var lowStock = 'Sản phẩm sắp hết hàng';
-
-  static var sortBy = 'Sắp xếp theo';
-
-  static String none = 'Không';
-
-  static String name  = 'Tên';
-
-  static var ascending = 'Tăng dần';
-
-  static var descending = 'Giảm dần';
-
 }
